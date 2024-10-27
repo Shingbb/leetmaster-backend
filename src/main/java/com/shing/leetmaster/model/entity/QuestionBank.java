@@ -2,17 +2,22 @@ package com.shing.leetmaster.model.entity;
 
 import java.io.Serializable;
 import java.util.Date;
+
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
 /**
  * 题库
  * @TableName question_bank
  */
+@TableName("question_bank")
 @Data
 public class QuestionBank implements Serializable {
+
     /**
-     * id
+     * id（要指定主键策略）雪花算法
      */
+    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
 
     /**
@@ -33,6 +38,7 @@ public class QuestionBank implements Serializable {
     /**
      * 创建用户 id
      */
+    @TableField(fill = FieldFill.INSERT)
     private Long userId;
 
     /**
@@ -81,9 +87,11 @@ public class QuestionBank implements Serializable {
     private Integer viewNum;
 
     /**
-     * 是否删除
+     * 是否删除（逻辑删除） 0-未删除，1-已删除
      */
+    @TableLogic
     private Integer isDelete;
 
+    @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 }

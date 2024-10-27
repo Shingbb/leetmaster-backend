@@ -33,13 +33,10 @@ import static com.shing.leetmaster.constant.SystemConstants.SALT;
 
 /**
  * 用户服务实现
- * 
  */
 @Service
 @Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
-//    @Resource
-//    private GitHubConfig gitHubConfig;
 
     @Override
     public long userRegister(String userAccount, String userPassword, String checkPassword) {
@@ -274,7 +271,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private void saveGithubUser(String userAccount, AuthUser authUser) {
         User user;
         user = new User();
-        String defaultPassword = authUser.getUuid()+authUser.getUsername();
+        String defaultPassword = authUser.getUuid() + authUser.getUsername();
         String encryptPassword = DigestUtils.md5DigestAsHex((SALT + defaultPassword).getBytes());
         user.setUserPassword(encryptPassword);
         user.setUserAccount(userAccount);
