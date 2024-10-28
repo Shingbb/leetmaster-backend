@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.stereotype.Component;
 
+import java.util.Date;
+
 /**
  * @author shing
  */
@@ -31,6 +33,9 @@ public class BatisMetaObjectHandler implements MetaObjectHandler {
                 log.error("插入填充失败：{}", e.getMessage());
             }
         }
+        // 填充创建时间字段和更新时间字段
+        this.strictInsertFill(metaObject, "createTime", Date.class, new Date());
+        this.strictInsertFill(metaObject, "updateTime", Date.class, new Date());
     }
 
     /**
@@ -42,5 +47,18 @@ public class BatisMetaObjectHandler implements MetaObjectHandler {
         // 更新操作开始时记录日志
         log.info("开始更新填充...");
         // 此处可以添加更新填充的逻辑，本示例中未具体实现
+        // 自动填充审核人ID和审核时间
+        if (metaObject.hasGetter("reviewerId")) {
+            try {
+                this.strictUpdateFill(metaObject, "reviewerId", Long.class, Long.valueOf(StpUtil.getLoginId().toString()));
+            } catch (Exception e) {
+                log.error("更新填充失败：{}", e.getMessage());
+            }
+        }
+        // 如果审核时间字段存在，则填充审核时间
+        if (metaObject.hasGetter("reviewTime")) {
+            this.strictUpdateFill(metaObject, "reviewTime", Date.class, new Date());
+        }
     }
+
 }

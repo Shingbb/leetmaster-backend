@@ -1,12 +1,9 @@
 package com.shing.leetmaster.controller;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import cn.dev33.satoken.annotation.SaCheckRole;
-import com.shing.leetmaster.common.BaseResponse;
-import com.shing.leetmaster.common.DeleteRequest;
-import com.shing.leetmaster.common.ErrorCode;
-import com.shing.leetmaster.common.ResultUtils;
+import com.shing.leetmaster.common.*;
 import com.shing.leetmaster.constant.UserConstant;
 import com.shing.leetmaster.exception.BusinessException;
 import com.shing.leetmaster.exception.ThrowUtils;
@@ -16,6 +13,7 @@ import com.shing.leetmaster.model.dto.question.QuestionQueryRequest;
 import com.shing.leetmaster.model.dto.question.QuestionUpdateRequest;
 import com.shing.leetmaster.model.entity.Question;
 import com.shing.leetmaster.model.entity.User;
+import com.shing.leetmaster.model.enums.ReviewStatusEnum;
 import com.shing.leetmaster.model.vo.QuestionVO;
 import com.shing.leetmaster.service.QuestionService;
 import com.shing.leetmaster.service.UserService;
@@ -26,6 +24,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -68,8 +67,7 @@ public class QuestionController {
         // 数据校验
         questionService.validQuestion(question, true);
         // 填充默认值
-        User loginUser = userService.getLoginUser();
-        question.setUserId(loginUser.getId());
+        // 通过注释完成自动填充 userId
         // 写入数据库
         boolean result = questionService.save(question);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
@@ -255,4 +253,40 @@ public class QuestionController {
     }
 
     // endregion
+
+    /**
+     * 题目审核
+     */
+    @PostMapping("/review")
+    @ApiOperation(value = "审核题目")
+    @SaCheckRole(UserConstant.ADMIN_ROLE)
+    public BaseResponse<Boolean> reviewQuestion(@RequestBody ReviewRequest reviewRequest) {
+        // 检查请求参数是否为 null
+        ThrowUtils.throwIf(reviewRequest == null, ErrorCode.PARAMS_ERROR);
+        // 获取请求中的 ID 和审核状态
+        Long id = reviewRequest.getId();
+        Integer reviewStatus = reviewRequest.getReviewStatus();
+        // 参数校验
+        ReviewStatusEnum reviewStatusEnum = ReviewStatusEnum.getEnumByValue(reviewStatus);
+        if (id == null || reviewStatusEnum == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        //判断要审核的信息是否存在
+        Question oldQuestion = questionService.getById(id);
+        ThrowUtils.throwIf(oldQuestion == null, ErrorCode.NOT_FOUND_ERROR);
+        //如果审核状态传入的状态一样，则不进行审核
+        if (oldQuestion.getReviewStatus().equals(reviewStatus)) {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "请勿重复审核");
+        }
+        //更新审核状态
+        Question question = new Question();
+        question.setId(id);
+        question.setReviewStatus(reviewStatus);
+        question.setReviewMessage(reviewRequest.getReviewMessage());
+
+        // 操作数据库
+        boolean result = questionService.updateById(question);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        return ResultUtils.success(true);
+    }
 }

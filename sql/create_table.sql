@@ -103,6 +103,10 @@ create table if not exists question
     createTime datetime default CURRENT_TIMESTAMP not null comment '创建时间',
     updateTime datetime default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
     isDelete   tinyint  default 0                 not null comment '是否删除',
+    reviewStatus  int      default 0  not null comment '状态：0-待审核, 1-通过, 2-拒绝',
+    reviewMessage varchar(512)        null comment '审核信息',
+    reviewerId    bigint              null comment '审核人 id',
+    reviewTime    datetime            null comment '审核时间',
     index idx_title (title),
     index idx_userId (userId)
 ) comment '题目' collate = utf8mb4_unicode_ci;

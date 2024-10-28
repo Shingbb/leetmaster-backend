@@ -80,11 +80,13 @@ public class Question implements Serializable {
     /**
      * 审核人 id
      */
+    @TableField(fill = FieldFill.UPDATE)
     private Long reviewerId;
 
     /**
      * 审核时间
      */
+    @TableField(fill = FieldFill.UPDATE)
     private Date reviewTime;
 
     /**

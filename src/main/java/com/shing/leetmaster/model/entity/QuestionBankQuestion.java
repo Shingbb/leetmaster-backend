@@ -3,10 +3,7 @@ package com.shing.leetmaster.model.entity;
 import java.io.Serializable;
 import java.util.Date;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
 /**
@@ -31,6 +28,7 @@ public class QuestionBankQuestion implements Serializable {
     /**
      * 题目 id
      */
+    @TableField(fill = FieldFill.INSERT)
     private Long questionId;
 
     /**
