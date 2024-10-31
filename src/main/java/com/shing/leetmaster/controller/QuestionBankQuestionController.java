@@ -237,6 +237,12 @@ public class QuestionBankQuestionController {
     }
 
     // endregion
+
+    /**
+     * 移除题库题目关联
+     * @param questionBankQuestionRemoveRequest 移除题库题目关联请求
+     * @return {@link BaseResponse }<{@link Boolean }>
+     */
     @PostMapping("/remove")
     @SaCheckRole(UserConstant.ADMIN_ROLE)
     @ApiOperation(value = "删除题库题目（给管理员使用）")

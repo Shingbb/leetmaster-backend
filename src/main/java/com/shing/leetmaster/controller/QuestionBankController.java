@@ -2,21 +2,19 @@ package com.shing.leetmaster.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import cn.dev33.satoken.annotation.SaCheckRole;
-import com.shing.leetmaster.common.BaseResponse;
-import com.shing.leetmaster.common.DeleteRequest;
-import com.shing.leetmaster.common.ErrorCode;
-import com.shing.leetmaster.common.ResultUtils;
+import com.shing.leetmaster.common.*;
 import com.shing.leetmaster.constant.UserConstant;
 import com.shing.leetmaster.exception.BusinessException;
 import com.shing.leetmaster.exception.ThrowUtils;
-import com.shing.leetmaster.model.dto.questionBank.QuestionBankAddRequest;
-import com.shing.leetmaster.model.dto.questionBank.QuestionBankEditRequest;
-import com.shing.leetmaster.model.dto.questionBank.QuestionBankQueryRequest;
-import com.shing.leetmaster.model.dto.questionBank.QuestionBankUpdateRequest;
+import com.shing.leetmaster.model.dto.question.QuestionQueryRequest;
+import com.shing.leetmaster.model.dto.questionBank.*;
+import com.shing.leetmaster.model.entity.Question;
 import com.shing.leetmaster.model.entity.QuestionBank;
 import com.shing.leetmaster.model.entity.User;
+import com.shing.leetmaster.model.enums.ReviewStatusEnum;
 import com.shing.leetmaster.model.vo.QuestionBankVO;
 import com.shing.leetmaster.service.QuestionBankService;
+import com.shing.leetmaster.service.QuestionService;
 import com.shing.leetmaster.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -30,7 +28,6 @@ import javax.annotation.Resource;
  * 题库接口
  *
  * @author shing
-
  */
 @RestController
 @RequestMapping("/questionBank")
@@ -40,6 +37,9 @@ public class QuestionBankController {
 
     @Resource
     private QuestionBankService questionBankService;
+
+    @Resource
+    private QuestionService questionService;
 
     @Resource
     private UserService userService;
@@ -134,15 +134,49 @@ public class QuestionBankController {
      * @param id 题库 id
      * @return {@link BaseResponse }<{@link QuestionBankVO }>
      */
-    @GetMapping("/get/vo")
-    @ApiOperation(value = "根据 id 获取题库（封装类）")
-    public BaseResponse<QuestionBankVO> getQuestionBankVOById(long id) {
+    @GetMapping("/get/vo/id")
+    @ApiOperation(value = "仅根据 id 获取题库（封装类）")
+    public BaseResponse<QuestionBankVO> getQuestionBankVOByIdOnly(long id) {
         ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR);
         // 查询数据库
         QuestionBank questionBank = questionBankService.getById(id);
         ThrowUtils.throwIf(questionBank == null, ErrorCode.NOT_FOUND_ERROR);
         // 获取封装类
         return ResultUtils.success(questionBankService.getQuestionBankVO(questionBank));
+    }
+
+    /**
+     * 根据 id 获取题库（封装类）
+     *
+     * @param questionBankIdQueryRequest 题库 id
+     * @return {@link BaseResponse }<{@link QuestionBankVO }>
+     */
+    @GetMapping("/get/vo")
+    @ApiOperation(value = "根据 id 获取题库（封装类）")
+    public BaseResponse<QuestionBankVO> getQuestionBankVOById(QuestionBankIdQueryRequest questionBankIdQueryRequest) {
+        ThrowUtils.throwIf(questionBankIdQueryRequest == null, ErrorCode.NOT_FOUND_ERROR);
+        Long id = questionBankIdQueryRequest.getQuestionBankId();
+        ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR);
+        // 查询数据库
+        QuestionBank questionBank = questionBankService.getById(id);
+        ThrowUtils.throwIf(questionBank == null, ErrorCode.NOT_FOUND_ERROR);
+        // 查询题库封装类
+        QuestionBankVO questionBankVO = questionBankService.getQuestionBankVO(questionBank);
+        // 是否要关联查询题库下的题目列表
+        boolean needQueryQuestionList = questionBankIdQueryRequest.isNeedQueryQuestionList();
+        // 如果需要查询问题列表
+        if (needQueryQuestionList) {
+            // 创建一个 question 查询请求对象
+            QuestionQueryRequest questionQueryRequest = new QuestionQueryRequest();
+            // 设置题库ID
+            questionQueryRequest.setQuestionBankId(id);
+            // 调用服务方法，按页列表查询问题
+            Page<Question> questionPage = questionService.listQuestionByPage(questionQueryRequest);
+            // 设置 question 页面到 question 视图对象
+            questionBankVO.setQuestionPage(questionPage);
+        }
+        // 获取封装类
+        return ResultUtils.success(questionBankVO);
     }
 
     /**
@@ -240,4 +274,40 @@ public class QuestionBankController {
     }
 
     // endregion
+
+    /**
+     * 题目审核
+     */
+    @PostMapping("/review")
+    @ApiOperation(value = "审核题库")
+    @SaCheckRole(UserConstant.ADMIN_ROLE)
+    public BaseResponse<Boolean> reviewQuestion(@RequestBody ReviewRequest reviewRequest) {
+        // 检查请求参数是否为 null
+        ThrowUtils.throwIf(reviewRequest == null, ErrorCode.PARAMS_ERROR);
+        // 获取请求中的 ID 和审核状态
+        Long id = reviewRequest.getId();
+        Integer reviewStatus = reviewRequest.getReviewStatus();
+        // 参数校验
+        ReviewStatusEnum reviewStatusEnum = ReviewStatusEnum.getEnumByValue(reviewStatus);
+        if (id == null || reviewStatusEnum == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        //判断要审核的信息是否存在
+        Question oldQuestion = questionService.getById(id);
+        ThrowUtils.throwIf(oldQuestion == null, ErrorCode.NOT_FOUND_ERROR);
+        //如果审核状态传入的状态一样，则不进行审核
+        if (oldQuestion.getReviewStatus().equals(reviewStatus)) {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "请勿重复审核");
+        }
+        //更新审核状态
+        Question question = new Question();
+        question.setId(id);
+        question.setReviewStatus(reviewStatus);
+        question.setReviewMessage(reviewRequest.getReviewMessage());
+
+        // 操作数据库
+        boolean result = questionService.updateById(question);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        return ResultUtils.success(true);
+    }
 }

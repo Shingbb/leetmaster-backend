@@ -43,6 +43,11 @@ public class QuestionBankQueryRequest extends PageRequest implements Serializabl
     private Long userId;
 
     /**
+     * 是否要关联查询题目列表
+     */
+    private  boolean needQueryQuestionList;
+
+    /**
      * 搜索词
      */
     private String searchText;
