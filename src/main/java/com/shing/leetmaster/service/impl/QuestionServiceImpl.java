@@ -1,7 +1,9 @@
 package com.shing.leetmaster.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shing.leetmaster.common.ErrorCode;
@@ -10,9 +12,11 @@ import com.shing.leetmaster.exception.ThrowUtils;
 import com.shing.leetmaster.mapper.QuestionMapper;
 import com.shing.leetmaster.model.dto.question.QuestionQueryRequest;
 import com.shing.leetmaster.model.entity.Question;
+import com.shing.leetmaster.model.entity.QuestionBankQuestion;
 import com.shing.leetmaster.model.entity.User;
 import com.shing.leetmaster.model.vo.QuestionVO;
 import com.shing.leetmaster.model.vo.UserVO;
+import com.shing.leetmaster.service.QuestionBankQuestionService;
 import com.shing.leetmaster.service.QuestionService;
 import com.shing.leetmaster.service.UserService;
 import com.shing.leetmaster.utils.SqlUtils;
@@ -38,6 +42,9 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private QuestionBankQuestionService questionBankQuestionService;
 
     /**
      * 校验数据
@@ -162,4 +169,37 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
         return questionVOPage;
     }
 
+
+    /**
+     * 根据分页请求查询问题列表
+     *
+     * @param questionQueryRequest 包含查询参数的请求对象
+     * @return 包含问题列表的分页响应对象
+     */
+    public Page<Question> listQuestionByPage(QuestionQueryRequest questionQueryRequest) {
+        // 获取当前页码和页面大小
+        long current = questionQueryRequest.getCurrent();
+        long size = questionQueryRequest.getPageSize();
+        // 题目表的查询条件
+        QueryWrapper<Question> queryWrapper = this.getQueryWrapper(questionQueryRequest);
+        // 根据题目查询题目列表接口
+        Long questionBankId = questionQueryRequest.getQuestionBankId();
+        if (questionBankId != null) {
+            // 查询题库内的题目id
+            LambdaQueryWrapper<QuestionBankQuestion> lambdaQueryWrapper = Wrappers.lambdaQuery(QuestionBankQuestion.class)
+                    .select(QuestionBankQuestion::getQuestionId)
+                    .eq(QuestionBankQuestion::getQuestionBankId, questionBankId);
+            List<QuestionBankQuestion> questionList = questionBankQuestionService.list(lambdaQueryWrapper);
+            if (CollUtil.isNotEmpty(questionList)) {
+                // 取出题目 id 集合
+                Set<Long> questionIdSet = questionList.stream().map(QuestionBankQuestion::getQuestionId).collect(Collectors.toSet());
+                // 复用原有题目表的查询条件
+                queryWrapper.in("id", questionIdSet);
+            }
+        }
+        // 查询数据库
+        Page<Question> questionPage = this.page(new Page<>(current, size), queryWrapper);
+        // 返回成功响应
+        return questionPage;
+    }
 }

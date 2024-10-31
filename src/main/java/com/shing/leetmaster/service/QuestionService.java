@@ -18,7 +18,7 @@ public interface QuestionService extends IService<Question> {
      * 校验数据
      *
      * @param question 数据
-     * @param add 对创建的数据进行校验
+     * @param add      对创建的数据进行校验
      */
     void validQuestion(Question question, boolean add);
 
@@ -29,7 +29,7 @@ public interface QuestionService extends IService<Question> {
      * @return QueryWrapper
      */
     QueryWrapper<Question> getQueryWrapper(QuestionQueryRequest questionQueryRequest);
-    
+
     /**
      * 获取题目封装
      *
@@ -45,4 +45,13 @@ public interface QuestionService extends IService<Question> {
      * @return Page<QuestionVO>
      */
     Page<QuestionVO> getQuestionVOPage(Page<Question> questionPage);
+
+    /**
+     * 根据分页请求查询问题列表
+     *
+     * @param questionQueryRequest 包含查询参数的请求对象
+     * @return 包含问题列表的分页响应对象
+     */
+    Page<Question> listQuestionByPage(QuestionQueryRequest questionQueryRequest);
+
 }

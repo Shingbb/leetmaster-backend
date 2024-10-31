@@ -37,13 +37,20 @@ public class QuestionQueryRequest extends PageRequest implements Serializable {
      */
     private List<String> tags;
 
+    /**
+     * 推荐答案
+     */
     private String answer;
+
+    /**
+     * 题库 id
+     */
+    private Long questionBankId;
 
     /**
      * 创建用户 id
      */
     private Long userId;
-
 
     /**
      * 审核状态（0-待审核, 1-审核通过, 2-审核不通过）
