@@ -291,11 +291,11 @@ public class UserController {
      */
     @GetMapping("/get/sign_in")
     @ApiOperation(value = "获取用户签到记录")
-    public BaseResponse<Map<LocalDate, Boolean>> getUserSignInRecord(Integer year) {
+    public BaseResponse<List<Integer>> getUserSignInRecord(Integer year) {
         // 必须要登录才能获取
         User loginUser = userService.getLoginUser();
         // 获取用户签到记录
-        Map<LocalDate, Boolean> userSignInRecord = userService.getUserSignInRecord(loginUser.getId(), year);
+        List<Integer> userSignInRecord = userService.getUserSignInRecord(loginUser.getId(), year);
         // 返回用户签到记录
         return ResultUtils.success(userSignInRecord);
     }
