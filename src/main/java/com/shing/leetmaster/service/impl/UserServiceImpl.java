@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shing.leetmaster.common.ErrorCode;
 import com.shing.leetmaster.constant.CommonConstant;
+import com.shing.leetmaster.constant.RedisConstant;
 import com.shing.leetmaster.constant.SystemConstants;
 import com.shing.leetmaster.exception.BusinessException;
 import com.shing.leetmaster.mapper.UserMapper;
@@ -19,24 +20,35 @@ import com.shing.leetmaster.model.vo.UserVO;
 import com.shing.leetmaster.service.UserService;
 import com.shing.leetmaster.utils.SqlUtils;
 import lombok.extern.slf4j.Slf4j;
-import me.zhyd.oauth.model.AuthUser;
 import org.apache.commons.lang3.StringUtils;
+import org.redisson.api.RBitSet;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
+import javax.annotation.Resource;
+import java.time.LocalDate;
+import java.time.Year;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.shing.leetmaster.constant.SystemConstants.SALT;
 
 /**
  * 用户服务实现
+ *
+ * @author Shing
  */
 @Service
 @Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
+
+    @Resource
+    private RedissonClient redissonClient;
 
     @Override
     public long userRegister(String userAccount, String userPassword, String checkPassword) {
@@ -247,28 +259,81 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return queryWrapper;
     }
 
-//    @Override
-//    public TokenLoginUserVo userLoginByGithub(AuthCallback callback) {
-//        AuthRequest authRequest = gitHubConfig.getAuthRequest();
-//        AuthResponse response = authRequest.login(callback);
-//        // 获取用户信息
-//        AuthUser authUser = (AuthUser) response.getData();
-//        if (authUser == null) {
-//            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"Github 登录失败，获取用户信息失败");
-//        }
-//        //判断用户是否存在
-//        String userAccount = authUser.getUsername();
-//
-//        //1、用户不存在，则注册
-//        User user = this.getOne(new LambdaQueryWrapper<User>().eq(User::getUserAccount, userAccount));
-//        if (user == null) {
-//            saveGithubUser(userAccount, authUser);
-//        }
-//        //2、用户存在，则登录
-//        return this.userLogin(userAccount, authUser.getUuid()+authUser.getUsername());
-//    }
+    /**
+     * 添加用户签到记录
+     *
+     * @param userId 用户签到
+     * @return 当前是否已签到成功
+     */
+    @Override
+    public boolean addUserSignIn(long userId) {
+        LocalDate date = LocalDate.now();
+        String key = RedisConstant.getUserSignInRedisKey(date.getYear(), userId);
+        RBitSet signInBitSet = redissonClient.getBitSet(key);
+        // 获取当前日期是一年中的第几天，作为偏移量（从 1 开始计数）
+        int offset = date.getDayOfYear();
+        // 检查当天是否已经签到
+        if (!signInBitSet.get(offset)) {
+            // 如果当天还未签到，则设置
+            return signInBitSet.set(offset, true);
+        }
+        // 当天已签到
+        return true;
+    }
 
-    private void saveGithubUser(String userAccount, AuthUser authUser) {
+    /**
+     * 获取用户签到记录
+     *
+     * @param userId 用户 id
+     * @param year   年份（为空表示当前年份）
+     * @return 签到记录
+     */
+    @Override
+    public Map<LocalDate, Boolean> getUserSignInRecord(long userId, Integer year) {
+        if (year == null) {
+            LocalDate date = LocalDate.now();
+            year = date.getYear();
+        }
+        String key = RedisConstant.getUserSignInRedisKey(year, userId);
+        RBitSet signInBitSet = redissonClient.getBitSet(key);
+        // LinkedHashMap 保证有序
+        Map<LocalDate, Boolean> result = new LinkedHashMap<>();
+        // 获取当前年份的总天数
+        int totalDays = Year.of(year).length();
+        // 依次获取每一天的签到状态
+        for (int dayOfYear = 1; dayOfYear <= totalDays; dayOfYear++) {
+            // 获取 key：当前日期
+            LocalDate currentDate = LocalDate.ofYearDay(year, dayOfYear);
+            // 获取 value：当天是否有刷题
+            boolean hasRecord = signInBitSet.get(dayOfYear);
+            // 将结果放入 map
+            result.put(currentDate, hasRecord);
+        }
+        return result;
+    }
+
+    /*@Override
+    public TokenLoginUserVo userLoginByGithub(AuthCallback callback) {
+        AuthRequest authRequest = gitHubConfig.getAuthRequest();
+        AuthResponse response = authRequest.login(callback);
+        // 获取用户信息
+        AuthUser authUser = (AuthUser) response.getData();
+        if (authUser == null) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"Github 登录失败，获取用户信息失败");
+        }
+        //判断用户是否存在
+        String userAccount = authUser.getUsername();
+
+        //1、用户不存在，则注册
+        User user = this.getOne(new LambdaQueryWrapper<User>().eq(User::getUserAccount, userAccount));
+        if (user == null) {
+            saveGithubUser(userAccount, authUser);
+        }
+        //2、用户存在，则登录
+        return this.userLogin(userAccount, authUser.getUuid()+authUser.getUsername());
+    }*/
+
+    /*private void saveGithubUser(String userAccount, AuthUser authUser) {
         User user;
         user = new User();
         String defaultPassword = authUser.getUuid() + authUser.getUsername();
@@ -280,5 +345,5 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         user.setUserName(authUser.getNickname());
         user.setUserRole(UserRoleEnum.USER.getValue());
         this.save(user);
-    }
+    }*/
 }

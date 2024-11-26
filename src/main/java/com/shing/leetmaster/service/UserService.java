@@ -5,14 +5,14 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.shing.leetmaster.model.dto.user.UserQueryRequest;
 import com.shing.leetmaster.model.entity.User;
 import com.shing.leetmaster.model.vo.LoginUserVO;
-import com.shing.leetmaster.model.vo.TokenLoginUserVo;
 import com.shing.leetmaster.model.vo.UserVO;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 用户服务
- * 
  */
 public interface UserService extends IService<User> {
 
@@ -109,6 +109,24 @@ public interface UserService extends IService<User> {
      *
      * @param callback 回调
      * @return {@link TokenLoginUserVo }
+     *//*
+    TokenLoginUserVo userLoginByGithub(AuthCallback callback);*/
+
+    /**
+     * 添加用户签到记录
+     *
+     * @param userId 用户 id
+     * @return 当前是否已签到成功
      */
-//    TokenLoginUserVo userLoginByGithub(AuthCallback callback);
+    boolean addUserSignIn(long userId);
+
+    /**
+     * 获取用户某个年份的签到记录
+     *
+     * @param userId 用户 id
+     * @param year   年份（为空表示当前年份）
+     * @return 签到记录映射
+     */
+    Map<LocalDate, Boolean> getUserSignInRecord(long userId, Integer year);
+
 }

@@ -23,13 +23,14 @@ import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 import static com.shing.leetmaster.constant.SystemConstants.SALT;
 
 /**
  * 用户接口
- * 
  */
 @RestController
 @RequestMapping("/user")
@@ -270,4 +271,33 @@ public class UserController {
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return ResultUtils.success(true);
     }
+
+    /**
+     * 添加用户签到记录
+     */
+    @PostMapping("/add/sign_in")
+    @ApiOperation(value = "添加用户签到记录")
+    public BaseResponse<Boolean> addUserSignIn() {
+        // 必须要登录才能签到
+        User loginUser = userService.getLoginUser();
+        // 调用服务层方法，添加用户签到记录
+        boolean result = userService.addUserSignIn(loginUser.getId());
+        // 返回签到结果
+        return ResultUtils.success(result);
+    }
+
+    /**
+     * 获取用户签到记录
+     */
+    @GetMapping("/get/sign_in")
+    @ApiOperation(value = "获取用户签到记录")
+    public BaseResponse<Map<LocalDate, Boolean>> getUserSignInRecord(Integer year) {
+        // 必须要登录才能获取
+        User loginUser = userService.getLoginUser();
+        // 获取用户签到记录
+        Map<LocalDate, Boolean> userSignInRecord = userService.getUserSignInRecord(loginUser.getId(), year);
+        // 返回用户签到记录
+        return ResultUtils.success(userSignInRecord);
+    }
+
 }
