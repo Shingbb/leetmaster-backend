@@ -7,6 +7,8 @@ import com.shing.leetmaster.model.dto.question.QuestionQueryRequest;
 import com.shing.leetmaster.model.entity.Question;
 import com.shing.leetmaster.model.vo.QuestionVO;
 
+import java.util.List;
+
 /**
  * 题目服务
  *
@@ -53,5 +55,20 @@ public interface QuestionService extends IService<Question> {
      * @return 包含问题列表的分页响应对象
      */
     Page<Question> listQuestionByPage(QuestionQueryRequest questionQueryRequest);
+
+    /**
+     * 从 ES 查询题目
+     *
+     * @param questionQueryRequest 查询请求对象
+     * @return 包含查询结果的分页对象
+     */
+    Page<Question> searchFromEs(QuestionQueryRequest questionQueryRequest);
+
+    /**
+     * 批量删除题目
+     *
+     * @param questionIdList 题目 ID 列表
+     */
+    void batchDeleteQuestions(List<Long> questionIdList);
 
 }
