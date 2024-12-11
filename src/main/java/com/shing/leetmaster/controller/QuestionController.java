@@ -286,8 +286,8 @@ public class QuestionController {
     /**
      * 获取题目列表（ES）搜索接口（根据题目名称搜索）
      *
-     * @param questionQueryRequest
-     * @return
+     * @param questionQueryRequest 题目查询请求
+     * @return 题目列表
      */
     @PostMapping("/search/page/vo")
     @ApiOperation(value = "获取题目列表（ES）搜索接口")

@@ -23,14 +23,14 @@ import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 import static com.shing.leetmaster.constant.SystemConstants.SALT;
 
 /**
  * 用户接口
+ *
+ * @author Shing
  */
 @RestController
 @RequestMapping("/user")

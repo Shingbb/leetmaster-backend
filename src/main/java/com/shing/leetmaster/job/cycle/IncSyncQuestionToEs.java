@@ -1,4 +1,4 @@
-package com.shing.leetmaster.job;
+package com.shing.leetmaster.job.cycle;
 
 
 import cn.hutool.core.collection.CollUtil;

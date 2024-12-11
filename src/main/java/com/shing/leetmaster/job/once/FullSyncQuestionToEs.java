@@ -1,4 +1,4 @@
-package com.shing.leetmaster.job;
+package com.shing.leetmaster.job.once;
 
 import cn.hutool.core.collection.CollUtil;
 import com.shing.leetmaster.esdao.QuestionEsDao;
@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
  * @author Shing
  */
 // todo 取消注释开启任务
-@Component
+//@Component
 @Slf4j
 public class FullSyncQuestionToEs  implements CommandLineRunner {
 
