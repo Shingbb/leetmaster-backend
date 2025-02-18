@@ -34,7 +34,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/questionBankQuestion")
 @Slf4j
-//@Api(tags = "题库题目接口")
+@Api(tags = "题库题目接口")
 public class QuestionBankQuestionController {
 
     @Resource
