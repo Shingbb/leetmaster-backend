@@ -7,10 +7,7 @@ import com.shing.leetmaster.common.*;
 import com.shing.leetmaster.constant.UserConstant;
 import com.shing.leetmaster.exception.BusinessException;
 import com.shing.leetmaster.exception.ThrowUtils;
-import com.shing.leetmaster.model.dto.question.QuestionAddRequest;
-import com.shing.leetmaster.model.dto.question.QuestionEditRequest;
-import com.shing.leetmaster.model.dto.question.QuestionQueryRequest;
-import com.shing.leetmaster.model.dto.question.QuestionUpdateRequest;
+import com.shing.leetmaster.model.dto.question.*;
 import com.shing.leetmaster.model.entity.Question;
 import com.shing.leetmaster.model.entity.User;
 import com.shing.leetmaster.model.enums.ReviewStatusEnum;
@@ -34,7 +31,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/question")
 @Slf4j
-@Api(tags = "题目接口")
+//@Api(tags = "题目接口")
 public class QuestionController {
 
     @Resource
@@ -283,6 +280,39 @@ public class QuestionController {
         // 操作数据库
         boolean result = questionService.updateById(question);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        return ResultUtils.success(true);
+    }
+
+    /**
+     * 获取题目列表（ES）搜索接口（根据题目名称搜索）
+     *
+     * @param questionQueryRequest
+     * @return
+     */
+    @PostMapping("/search/page/vo")
+    public BaseResponse<Page<QuestionVO>> searchQuestionVOByPage(@RequestBody QuestionQueryRequest questionQueryRequest) {
+        long size = questionQueryRequest.getPageSize();
+        // 限制爬虫
+        ThrowUtils.throwIf(size > 200, ErrorCode.PARAMS_ERROR);
+        // todo 取消注释开启 ES（须先配置 ES）
+        // 查询 ES
+        // Page<Question> questionPage = questionService.searchFromEs(questionQueryRequest);
+        // 查询数据库（作为没有 ES 的降级方案）
+        Page<Question> questionPage = questionService.listQuestionByPage(questionQueryRequest);
+        return ResultUtils.success(questionService.getQuestionVOPage(questionPage));
+    }
+
+    /**
+     * 批量删除题目（仅管理员）
+     *
+     * @param questionBatchDeleteRequest 批量删除题目请求
+     * @return 删除结果
+     */
+    @PostMapping("/delete/batch")
+    @SaCheckRole(UserConstant.ADMIN_ROLE)
+    public BaseResponse<Boolean> batchDeleteQuestions(@RequestBody QuestionBatchDeleteRequest questionBatchDeleteRequest) {
+        ThrowUtils.throwIf(questionBatchDeleteRequest == null, ErrorCode.PARAMS_ERROR);
+        questionService.batchDeleteQuestions(questionBatchDeleteRequest.getQuestionIdList());
         return ResultUtils.success(true);
     }
 }

@@ -1,11 +1,13 @@
 package com.shing.leetmaster.model.vo;
 
+import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONUtil;
 import com.shing.leetmaster.model.entity.Question;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -85,8 +87,15 @@ public class QuestionVO implements Serializable {
             return null;
         }
         QuestionVO questionVO = new QuestionVO();
-        BeanUtils.copyProperties(question, questionVO);
-        questionVO.setTagList(JSONUtil.toList(question.getTags(), String.class));
+        // 确保 tags 字符串有效
+        if (question.getTags() != null && !question.getTags().isEmpty()) {
+            // 将 tags 字符串转为 JSONArray
+            JSONArray jsonArray = JSONUtil.parseArray(question.getTags());
+            // 将 JSONArray 转换为 List<String>
+            questionVO.setTagList(JSONUtil.toList(jsonArray, String.class));
+        } else {
+            questionVO.setTagList(Collections.emptyList());
+        }
         return questionVO;
     }
 }

@@ -31,6 +31,7 @@ import static com.shing.leetmaster.constant.SystemConstants.SALT;
 
 /**
  * 用户接口
+ * @author Shing
  */
 @RestController
 @RequestMapping("/user")

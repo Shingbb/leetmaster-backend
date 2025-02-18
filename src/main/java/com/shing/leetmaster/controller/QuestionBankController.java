@@ -2,6 +2,7 @@ package com.shing.leetmaster.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import cn.dev33.satoken.annotation.SaCheckRole;
+import com.jd.platform.hotkey.client.callback.JdHotKeyStore;
 import com.shing.leetmaster.common.*;
 import com.shing.leetmaster.constant.UserConstant;
 import com.shing.leetmaster.exception.BusinessException;
@@ -32,7 +33,7 @@ import javax.annotation.Resource;
 @RestController
 @RequestMapping("/questionBank")
 @Slf4j
-@Api(tags = "题库接口")
+//@Api(tags = "题库接口")
 public class QuestionBankController {
 
     @Resource
@@ -157,6 +158,17 @@ public class QuestionBankController {
         ThrowUtils.throwIf(questionBankIdQueryRequest == null, ErrorCode.NOT_FOUND_ERROR);
         Long id = questionBankIdQueryRequest.getQuestionBankId();
         ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR);
+        // 生成 key
+        String key = "bank_detail_" + id;
+        // 如果是热 key
+        if (JdHotKeyStore.isHotKey(key)) {
+            // 从本地缓存中获取缓存值
+            Object cachedQuestionBankVO = JdHotKeyStore.get(key);
+            if (cachedQuestionBankVO != null) {
+                // 如果缓存中有值，直接返回缓存的值
+                return ResultUtils.success((QuestionBankVO) cachedQuestionBankVO);
+            }
+        }
         // 查询数据库
         QuestionBank questionBank = questionBankService.getById(id);
         ThrowUtils.throwIf(questionBank == null, ErrorCode.NOT_FOUND_ERROR);
@@ -175,6 +187,8 @@ public class QuestionBankController {
             // 设置 question 页面到 question 视图对象
             questionBankVO.setQuestionPage(questionPage);
         }
+        // 设置本地缓存
+        JdHotKeyStore.smartSet(key, questionBankVO);
         // 获取封装类
         return ResultUtils.success(questionBankVO);
     }

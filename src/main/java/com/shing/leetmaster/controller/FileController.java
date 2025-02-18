@@ -26,12 +26,13 @@ import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 文件接口
- * 
+ *
+ * @author Shing
  */
 @RestController
 @RequestMapping("/file")
 @Slf4j
-@Api(tags = "文件")
+//@Api(tags = "文件")
 public class FileController {
 
     @Resource
@@ -96,7 +97,7 @@ public class FileController {
         // 文件大小
         long fileSize = multipartFile.getSize();
         // 文件后缀
-        String fileSuffix = FileUtil.getSuffix(multipartFile.getOriginalFilename());
+        String fileSuffix = FileUtil.extName(multipartFile.getOriginalFilename());
         final long oneM = 1024 * 1024L;
         if (FileUploadBizEnum.USER_AVATAR.equals(fileUploadBizEnum)) {
             if (fileSize > oneM) {
