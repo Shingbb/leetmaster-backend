@@ -10,8 +10,8 @@ import org.springframework.context.annotation.Configuration;
  * 热键配置类，用于配置和初始化与热键相关的参数和客户端
  * @author shing
  */
-@Configuration
-@ConfigurationProperties(prefix = "hotkey")
+//@Configuration
+//@ConfigurationProperties(prefix = "hotkey")
 @Data
 public class HotKeyConfig {
     /**

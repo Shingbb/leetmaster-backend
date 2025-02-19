@@ -51,7 +51,13 @@
                 </exclusion>
             </exclusions>
         </dependency>
-       <!-- sentinel-->
+        <!--nacos-->
+        <dependency>
+            <groupId>com.alibaba.boot</groupId>
+            <artifactId>nacos-config-spring-boot-starter</artifactId>
+            <version>0.2.12</version>
+        </dependency>
+        <!-- sentinel-->
         <!-- https://mvnrepository.com/artifact/com.alibaba.cloud/spring-cloud-starter-alibaba-sentinel -->
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
