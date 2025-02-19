@@ -1,12 +1,14 @@
 package com.shing.leetmaster.controller;
 
 import cn.dev33.satoken.annotation.SaCheckRole;
+import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.shing.leetmaster.common.*;
 import com.shing.leetmaster.constant.UserConstant;
 import com.shing.leetmaster.exception.BusinessException;
 import com.shing.leetmaster.exception.ThrowUtils;
+import com.shing.leetmaster.manager.CounterManager;
 import com.shing.leetmaster.model.dto.question.*;
 import com.shing.leetmaster.model.entity.Question;
 import com.shing.leetmaster.model.entity.User;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 题目接口
@@ -39,6 +42,9 @@ public class QuestionController {
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private CounterManager counterManager;
 
     // region 增删改查
 
@@ -142,12 +148,17 @@ public class QuestionController {
     @ApiOperation(value = "根据 id 获取题目（封装类）")
     public BaseResponse<QuestionVO> getQuestionVOById(long id) {
         ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR);
+        // 检测和处理爬虫
+        User loginUser = userService.getLoginUser();
+        crawlerDetect(loginUser.getId());
         // 查询数据库
         Question question = questionService.getById(id);
         ThrowUtils.throwIf(question == null, ErrorCode.NOT_FOUND_ERROR);
         // 获取封装类
         return ResultUtils.success(questionService.getQuestionVO(question));
     }
+
+
 
     /**
      * 分页获取题目列表（仅管理员可用）
@@ -313,5 +324,38 @@ public class QuestionController {
         ThrowUtils.throwIf(questionBatchDeleteRequest == null, ErrorCode.PARAMS_ERROR);
         questionService.batchDeleteQuestions(questionBatchDeleteRequest.getQuestionIdList());
         return ResultUtils.success(true);
+    }
+
+    /**
+     * 检测爬虫
+     *
+     * @param loginUserId 登录用户ID
+     * 爬虫检测
+     */
+    private void crawlerDetect(long loginUserId) {
+        // 调用多少次时告警
+        final int WARN_COUNT = 10;
+        // 超过多少次封号
+        final int BAN_COUNT = 20;
+        // 拼接访问 key
+        String key = String.format("user:access:%s", loginUserId);
+        // 一分钟内访问次数，180 秒过期
+        long count = counterManager.incrAndGetCounter(key, 1, TimeUnit.MINUTES, 180);
+        // 是否封号
+        if (count > BAN_COUNT) {
+            // 踢下线
+            StpUtil.kickout(loginUserId);
+            // 封号
+            User updateUser = new User();
+            updateUser.setId(loginUserId);
+            updateUser.setUserRole("ban");
+            userService.updateById(updateUser);
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "访问太频繁，已被封号");
+        }
+        // 是否告警
+        if (count == WARN_COUNT) {
+            // 可以改为向管理员发送邮件通知
+            throw new BusinessException(110, "警告访问太频繁");
+        }
     }
 }
