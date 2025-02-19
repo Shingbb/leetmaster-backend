@@ -9,6 +9,8 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * MyBatis Plus 配置
+ *
+ * @author Shing
  */
 @Configuration
 @MapperScan("com.shing.leetmaster.mapper")

@@ -17,6 +17,7 @@ public class BatisMetaObjectHandler implements MetaObjectHandler {
 
     /**
      * 插入填充方法，用于在插入数据前自动填充某些字段
+     *
      * @param metaObject 待插入的元对象，通过该对象进行字段填充
      */
     @Override
@@ -40,6 +41,7 @@ public class BatisMetaObjectHandler implements MetaObjectHandler {
 
     /**
      * 更新填充方法，用于在更新数据前自动填充某些字段
+     *
      * @param metaObject 待更新的元对象，通过该对象进行字段填充
      */
     @Override

@@ -11,9 +11,11 @@ import com.shing.leetmaster.model.dto.file.UploadFileRequest;
 import com.shing.leetmaster.model.entity.User;
 import com.shing.leetmaster.model.enums.FileUploadBizEnum;
 import com.shing.leetmaster.service.UserService;
+
 import java.io.File;
 import java.util.Arrays;
 import javax.annotation.Resource;
+
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -52,7 +54,7 @@ public class FileController {
     @PostMapping("/upload")
     @ApiOperation(value = "文件上传")
     public BaseResponse<String> uploadFile(@RequestPart("file") MultipartFile multipartFile,
-            UploadFileRequest uploadFileRequest) {
+                                           UploadFileRequest uploadFileRequest) {
         String biz = uploadFileRequest.getBiz();
         FileUploadBizEnum fileUploadBizEnum = FileUploadBizEnum.getEnumByValue(biz);
         if (fileUploadBizEnum == null) {

@@ -19,6 +19,8 @@ import javax.servlet.http.HttpServletRequest;
 
 /**
  * 权限校验 AOP
+ *
+ * @author Shing
  */
 @Aspect
 @Component
