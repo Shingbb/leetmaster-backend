@@ -35,7 +35,7 @@ public class BlackIpUtils {
         // 加锁防止并发
         synchronized (BlackIpUtils.class) {
             if (CollectionUtil.isNotEmpty(blackIpList)) {
-                // 注意构造参数的设置
+                // 构造布隆过滤器，注意构造参数的设置
                 BitMapBloomFilter bitMapBloomFilter = new BitMapBloomFilter(958506);
                 for (String ip : blackIpList) {
                     bitMapBloomFilter.add(ip);
