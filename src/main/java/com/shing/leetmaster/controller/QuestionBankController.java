@@ -27,6 +27,7 @@ import com.shing.leetmaster.sentinel.SentinelConstant;
 import com.shing.leetmaster.service.QuestionBankService;
 import com.shing.leetmaster.service.QuestionService;
 import com.shing.leetmaster.service.UserService;
+import com.shing.leetmaster.utils.IpUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -69,12 +70,10 @@ public class QuestionBankController {
     @SaCheckRole(UserConstant.ADMIN_ROLE)
     public BaseResponse<Long> addQuestionBank(@RequestBody QuestionBankAddRequest questionBankAddRequest) {
         ThrowUtils.throwIf(questionBankAddRequest == null, ErrorCode.PARAMS_ERROR);
-        // todo 在此处将实体类和 DTO 进行转换
         QuestionBank questionBank = new QuestionBank();
         BeanUtils.copyProperties(questionBankAddRequest, questionBank);
         // 数据校验
         questionBankService.validQuestionBank(questionBank, true);
-        // todo 填充默认值
         User loginUser = userService.getLoginUser();
         questionBank.setUserId(loginUser.getId());
         // 写入数据库
@@ -125,7 +124,6 @@ public class QuestionBankController {
         if (questionBankUpdateRequest == null || questionBankUpdateRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        // todo 在此处将实体类和 DTO 进行转换
         QuestionBank questionBank = new QuestionBank();
         BeanUtils.copyProperties(questionBankUpdateRequest, questionBank);
         // 数据校验
@@ -283,8 +281,12 @@ public class QuestionBankController {
         long size = questionQueryRequest.getPageSize();
         // 限制爬虫
         ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
-        // 基于 IP 限流
-        String remoteAddr = request.getRemoteAddr();
+        // 方法一：基于 IP 限流 （使用 request 获取客户端 IP）
+//        String remoteAddr = request.getRemoteAddr();
+        // 方法二：基于 IP 限流（使用 ipUtils 工具类获取客户端真实 IP）
+        String remoteAddr = IpUtils.getClientIp(request);
+        // 方法三 ：基于 IP 限流 （ ipFilter 过滤器获取客户端真实 IP）
+        String clientIp = (String) request.getAttribute("clientIp");
         Entry entry = null;
         try {
             entry = SphU.entry(SentinelConstant.listQuestionVOByPage, EntryType.IN, 1, remoteAddr);
@@ -379,7 +381,6 @@ public class QuestionBankController {
         if (questionBankEditRequest == null || questionBankEditRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        // todo 在此处将实体类和 DTO 进行转换
         QuestionBank questionBank = new QuestionBank();
         BeanUtils.copyProperties(questionBankEditRequest, questionBank);
         // 数据校验

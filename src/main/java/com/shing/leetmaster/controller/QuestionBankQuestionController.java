@@ -55,12 +55,10 @@ public class QuestionBankQuestionController {
     @ApiOperation(value = "创建题库题目")
     public BaseResponse<Long> addQuestionBankQuestion(@RequestBody QuestionBankQuestionAddRequest questionBankQuestionAddRequest) {
         ThrowUtils.throwIf(questionBankQuestionAddRequest == null, ErrorCode.PARAMS_ERROR);
-        // todo 在此处将实体类和 DTO 进行转换
         QuestionBankQuestion questionBankQuestion = new QuestionBankQuestion();
         BeanUtils.copyProperties(questionBankQuestionAddRequest, questionBankQuestion);
         // 数据校验
         questionBankQuestionService.validQuestionBankQuestion(questionBankQuestion, true);
-        // todo 填充默认值
         User loginUser = userService.getLoginUser();
         questionBankQuestion.setUserId(loginUser.getId());
         // 写入数据库
@@ -111,7 +109,6 @@ public class QuestionBankQuestionController {
         if (questionBankQuestionUpdateRequest == null || questionBankQuestionUpdateRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        // todo 在此处将实体类和 DTO 进行转换
         QuestionBankQuestion questionBankQuestion = new QuestionBankQuestion();
         BeanUtils.copyProperties(questionBankQuestionUpdateRequest, questionBankQuestion);
         // 数据校验
